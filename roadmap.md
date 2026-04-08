@@ -8,4 +8,16 @@ Add a double jump to the player movement \
 <em>Content Credit:</em>  
 <strong>Commit message feat(double_jump):</strong> add double jump into Player update function\
 
-<strong>Next/TO DO:</strong> texture and animation on player
+<strong>Next/TO DO:</strong> texture and animation on player \
+
+
+### Goal
+Add Ghost texture and animation \
+<strong>Implementation</strong> \
+<em>Technical Plan/Credit:</em> Check up and Snake Game \
+<em>Content Credit:</em>  
+<strong>Commit message feat(animation):</strong> Add animation to the player \
+
+<strong>Next/TO DO:</strong> Texture on the enemy
+
+

@@ -2,6 +2,8 @@ import random
 import math
 from raylib import *
 from pyray import *
+from anim import *
+from enum import IntEnum
 
 # --- Game Constants ---
 SCREEN_WIDTH = 800
@@ -48,6 +50,14 @@ WORLD_WIDTH = TILE_COLS * TILE_SIZE
 WORLD_HEIGHT = TILE_ROWS * TILE_SIZE
 
 # --- Utility Functions ---
+
+
+
+class State(IntEnum):
+    IDLE = 1
+    WALKING = 2
+    JUMPING = 3
+
 
 def parse_level(level):
     """
@@ -96,18 +106,70 @@ class Player:
         self.is_grounded = False
         self.can_double_jump = True
 
+        #state
+        self.state = State.IDLE
+        self.direction = Direction.RIGHT
+
+        self.startup()
+
+    def startup(self):
+        self.texture = load_texture("assets/hero-sheet.png")
+
+        self.idle_animation = Animation(
+            first=0, 
+            last=3, 
+            cur=0,
+            step=1, 
+            duration=0.1, 
+            duration_left=0.1,
+            anim_type=AnimationType.REPEATING,
+            row=5, 
+            sprites_in_row=4,
+        )
+
+        self.walk_animation = Animation(
+            first=0, 
+            last=2, 
+            cur=0,
+            step=1, 
+            duration=0.1, 
+            duration_left=0.1,
+            anim_type=AnimationType.REPEATING,
+            row=6, 
+            sprites_in_row=3,
+        )
+
+        self.jump_animation = Animation(
+            first=0, 
+            last=2, 
+            cur=0,
+            step=1, 
+            duration=0.2, 
+            duration_left=0.1,
+            anim_type=AnimationType.ONESHOT,
+            row=7, 
+            sprites_in_row=3,
+        )
+
     def get_rect(self):
         """Returns the player's collision bounding box (top-left, width, height)."""
         return (self.x, self.y, self.width, self.height)
 
     def update(self, delta_time, level):
+
+        self.state = State.IDLE
+
         # 1. Handle Input (Horizontal Movement)
         self.vx = 0.0
         if IsKeyDown(KEY_LEFT) or IsKeyDown(KEY_A):
             self.vx = -PLAYER_SPEED
-        if IsKeyDown(KEY_RIGHT) or IsKeyDown(KEY_D):
+            self.direction = Direction.LEFT
+            self.state = State.WALKING
+        elif IsKeyDown(KEY_RIGHT) or IsKeyDown(KEY_D):
             self.vx = PLAYER_SPEED
-
+            self.direction = Direction.RIGHT
+            self.state = State.WALKING
+        
         # --- Velocity Zeroing for Stability ---
         if self.is_grounded:
             self.vy = 0.0
@@ -117,9 +179,11 @@ class Player:
         if ((IsKeyPressed(KEY_SPACE) or IsKeyPressed(KEY_UP)) and self.is_grounded):
             self.vy = JUMP_VELOCITY
             self.can_double_jump = True
+            self.state = State.JUMPING
         if ((IsKeyPressed(KEY_SPACE) or IsKeyPressed(KEY_UP)) and self.can_double_jump == True and not self.is_grounded):
             self.vy = JUMP_VELOCITY
             self.can_double_jump = False
+            self.state = State.JUMPING
 
         # 3. Apply Gravity
         self.vy += GRAVITY * delta_time
@@ -234,11 +298,47 @@ class Player:
 
     def draw(self):
         """Draws the player at their world coordinates."""
-        DrawRectangle(int(self.x), int(self.y), int(self.width), int(self.height), BLUE) 
-        if self.is_grounded:
-             DrawRectangleLines(int(self.x), int(self.y), int(self.width), int(self.height), WHITE)
-        else:
-             DrawRectangleLines(int(self.x), int(self.y), int(self.width), int(self.height), GRAY)
+        # DrawRectangle(int(self.x), int(self.y), int(self.width), int(self.height), BLUE) 
+        # if self.is_grounded:
+        #      DrawRectangleLines(int(self.x), int(self.y), int(self.width), int(self.height), WHITE)
+        # else:
+        #      DrawRectangleLines(int(self.x), int(self.y), int(self.width), int(self.height), GRAY)
+
+
+        match self.state:
+            case State.IDLE:
+                player_frame = Animation.frame(self.idle_animation, self.idle_animation.row)
+                self.x = int(self.x*TILE_SIZE)
+                self.y = int(self.y*TILE_SIZE)
+                player_frame.width *= self.direction
+                draw_texture_pro(
+                    self.texture,
+                    player_frame,
+                    Rectangle(self.x, self.y, TILE_SIZE, TILE_SIZE),
+                    self.origin, 0.0, WHITE,
+                )
+            case State.WALKING:
+                player_frame = Animation.frame(self.animation, self.animation.row)
+                self.dest.x = int(self.x*TILE_WIDTH+X_OFFSET)
+                self.dest.y = int(self.y*TILE_WIDTH+Y_OFFSET)
+                player_frame.width *= self.animation.direction
+                draw_texture_pro(
+                    self.texture,
+                    player_frame,
+                    self.dest,
+                    self.origin, 0.0, WHITE,
+                )
+            case State.JUMPING:
+                player_frame = Animation.frame(self.animation, self.animation.row)
+                self.dest.x = int(self.position.x*TILE_WIDTH+X_OFFSET)
+                self.dest.y = int(self.position.y*TILE_WIDTH+Y_OFFSET)
+                player_frame.width *= self.animation.direction
+                draw_texture_pro(
+                    self.texture,
+                    player_frame,
+                    self.dest,
+                    self.origin, 0.0, WHITE,
+                )
 
 
 class Enemy:
