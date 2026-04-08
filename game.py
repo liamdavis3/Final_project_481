@@ -94,6 +94,7 @@ class Player:
         self.vx = 0.0
         self.vy = 0.0
         self.is_grounded = False
+        self.can_double_jump = True
 
     def get_rect(self):
         """Returns the player's collision bounding box (top-left, width, height)."""
@@ -110,10 +111,15 @@ class Player:
         # --- Velocity Zeroing for Stability ---
         if self.is_grounded:
             self.vy = 0.0
+            self.can_double_jump = True
             
         # 2. Handle Input (Jump)
-        if (IsKeyPressed(KEY_SPACE) or IsKeyPressed(KEY_UP)) and self.is_grounded:
+        if ((IsKeyPressed(KEY_SPACE) or IsKeyPressed(KEY_UP)) and self.is_grounded):
             self.vy = JUMP_VELOCITY
+            self.can_double_jump = True
+        if ((IsKeyPressed(KEY_SPACE) or IsKeyPressed(KEY_UP)) and self.can_double_jump == True and not self.is_grounded):
+            self.vy = JUMP_VELOCITY
+            self.can_double_jump = False
 
         # 3. Apply Gravity
         self.vy += GRAVITY * delta_time
