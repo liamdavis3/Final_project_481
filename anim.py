@@ -56,7 +56,7 @@ class Animation:
     def frame(self, row):  # FIXES happened there to generalize to sprite sheet
         x = (self.cur % self.sprites_in_row) * 16
         y = 16 * self.row
-        return Rectangle(x, y, TILE_SIZE, TILE_SIZE)
+        return Rectangle(x, y, 16, 16)
 
     def reset(self): # ADDED
         self.cur = self.first

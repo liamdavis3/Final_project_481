@@ -109,12 +109,14 @@ class Player:
         #state
         self.state = State.IDLE
         self.direction = Direction.RIGHT
-
+        
         self.startup()
 
     def startup(self):
         self.texture = load_texture("assets/hero-sheet.png")
-
+        
+        self.origin = Vector2(0,0)
+        self.dest = Rectangle(0, 0, TILE_SIZE, TILE_SIZE)
         self.idle_animation = Animation(
             first=0, 
             last=3, 
@@ -157,24 +159,31 @@ class Player:
 
     def update(self, delta_time, level):
 
-        self.state = State.IDLE
 
+        match self.state:
+            case State.IDLE:
+                pass
+            case State.WALKING:
+                pass
+            case State.JUMPING:
+                pass
+    
         # 1. Handle Input (Horizontal Movement)
         self.vx = 0.0
         if IsKeyDown(KEY_LEFT) or IsKeyDown(KEY_A):
             self.vx = -PLAYER_SPEED
             self.direction = Direction.LEFT
-            self.state = State.WALKING
+            if self.state != State.JUMPING or self.is_grounded:
+                self.state = State.WALKING
         elif IsKeyDown(KEY_RIGHT) or IsKeyDown(KEY_D):
             self.vx = PLAYER_SPEED
             self.direction = Direction.RIGHT
-            self.state = State.WALKING
-        
-        # --- Velocity Zeroing for Stability ---
-        if self.is_grounded:
-            self.vy = 0.0
-            self.can_double_jump = True
-            
+            if self.state != State.JUMPING or self.is_grounded:
+                self.state = State.WALKING        
+        else:
+            if self.is_grounded:
+                self.state = State.IDLE
+
         # 2. Handle Input (Jump)
         if ((IsKeyPressed(KEY_SPACE) or IsKeyPressed(KEY_UP)) and self.is_grounded):
             self.vy = JUMP_VELOCITY
@@ -184,6 +193,7 @@ class Player:
             self.vy = JUMP_VELOCITY
             self.can_double_jump = False
             self.state = State.JUMPING
+        
 
         # 3. Apply Gravity
         self.vy += GRAVITY * delta_time
@@ -192,7 +202,6 @@ class Player:
 
         # --- Reset grounded state at start of frame update ---
         self.is_grounded = False
-
         # 4. Apply Movement (Separated for X and Y collision checks)
         
         # Apply X movement
@@ -308,20 +317,20 @@ class Player:
         match self.state:
             case State.IDLE:
                 player_frame = Animation.frame(self.idle_animation, self.idle_animation.row)
-                self.x = int(self.x*TILE_SIZE)
-                self.y = int(self.y*TILE_SIZE)
+                self.dest.x = int(self.x)
+                self.dest.y = int(self.y)
                 player_frame.width *= self.direction
                 draw_texture_pro(
                     self.texture,
                     player_frame,
-                    Rectangle(self.x, self.y, TILE_SIZE, TILE_SIZE),
-                    self.origin, 0.0, WHITE,
+                    self.dest,
+                    (self.origin), 0.0, WHITE,
                 )
             case State.WALKING:
-                player_frame = Animation.frame(self.animation, self.animation.row)
-                self.dest.x = int(self.x*TILE_WIDTH+X_OFFSET)
-                self.dest.y = int(self.y*TILE_WIDTH+Y_OFFSET)
-                player_frame.width *= self.animation.direction
+                player_frame = Animation.frame(self.walk_animation, self.walk_animation.row)
+                self.dest.x = int(self.x)
+                self.dest.y = int(self.y)
+                player_frame.width *= self.direction
                 draw_texture_pro(
                     self.texture,
                     player_frame,
@@ -329,10 +338,10 @@ class Player:
                     self.origin, 0.0, WHITE,
                 )
             case State.JUMPING:
-                player_frame = Animation.frame(self.animation, self.animation.row)
-                self.dest.x = int(self.position.x*TILE_WIDTH+X_OFFSET)
-                self.dest.y = int(self.position.y*TILE_WIDTH+Y_OFFSET)
-                player_frame.width *= self.animation.direction
+                player_frame = Animation.frame(self.jump_animation, self.jump_animation.row)
+                self.dest.x = int(self.x)
+                self.dest.y = int(self.y)
+                player_frame.width *= self.direction
                 draw_texture_pro(
                     self.texture,
                     player_frame,

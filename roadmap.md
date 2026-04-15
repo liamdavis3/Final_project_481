@@ -16,7 +16,7 @@ Add Ghost texture and animation \
 <strong>Implementation</strong> \
 <em>Technical Plan/Credit:</em> Check up and Snake Game \
 <em>Content Credit:</em>  
-<strong>Commit message feat(animation):</strong> Add animation to the player \
+<strong>Commit message:</strong> feat(animation)Add animation to the player \
 
 <strong>Next/TO DO:</strong> Texture on the enemy
 
